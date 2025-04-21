@@ -23,32 +23,18 @@
       z-index: 2;
     }
 
-    #controles {
+    #reiniciar {
       position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      gap: 15px;
+      top: 10px;
+      right: 10px;
       z-index: 3;
-    }
-
-    .fila {
-      display: flex;
-      gap: 15px;
-    }
-
-    .btn-control {
-      width: 80px;
-      height: 80px;
-      font-size: 36px;
+      padding: 10px 20px;
+      font-size: 18px;
+      border: none;
       background-color: #333;
       color: white;
-      border: none;
-      border-radius: 50%;
-      user-select: none;
+      border-radius: 10px;
+      cursor: pointer;
     }
 
     canvas {
@@ -76,23 +62,7 @@
       display: none;
     }
 
-    .mensaje-final button {
-      margin-top: 20px;
-      font-size: 18px;
-      padding: 10px 20px;
-      border: none;
-      background-color: #333;
-      color: white;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-
-    /* Mostrar controles solo en dispositivos móviles o tablets */
     @media (max-width: 768px) {
-      #controles {
-        display: flex;
-      }
-
       #puntaje {
         font-size: 26px;
       }
@@ -102,15 +72,9 @@
         padding: 40px;
       }
 
-      .mensaje-final button {
-        font-size: 22px;
-        padding: 12px 28px;
-      }
-
-      .btn-control {
-        width: 100px;
-        height: 100px;
-        font-size: 40px;
+      #reiniciar {
+        font-size: 20px;
+        padding: 12px 24px;
       }
     }
   </style>
@@ -119,19 +83,6 @@
   <div id="puntaje">⚽️ Puntaje: 0</div>
   <canvas id="juego"></canvas>
 
-  <!-- Controles móviles -->
-  <div id="controles">
-    <div class="fila">
-      <button class="btn-control" data-dir="up">⬆️</button>
-    </div>
-    <div class="fila">
-      <button class="btn-control" data-dir="left">⬅️</button>
-      <button class="btn-control" data-dir="down">⬇️</button>
-      <button class="btn-control" data-dir="right">➡️</button>
-    </div>
-  </div>
-
-  <!-- Pantalla final al perder -->
   <div id="pantallaFinal" class="mensaje-final">
     <div id="puntajeFinal">Tu puntaje: 0 ⚽</div>
     <button id="reiniciar">Volver a jugar</button>
@@ -142,7 +93,6 @@
     const ctx = canvas.getContext("2d");
     const puntajeTexto = document.getElementById("puntaje");
     const btnReiniciar = document.getElementById("reiniciar");
-    const controles = document.querySelectorAll(".btn-control");
     const mensajeFinal = document.getElementById("pantallaFinal");
     const puntajeFinal = document.getElementById("puntajeFinal");
 
@@ -157,21 +107,51 @@
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
       bloque = Math.floor(canvas.width / 30);
-
-      if (window.innerWidth <= 768) {
-        bloque = Math.floor(canvas.width / 20);
-      }
+      if (window.innerWidth <= 768) bloque = Math.floor(canvas.width / 20);
     }
     window.addEventListener("resize", ajustarCanvas);
     ajustarCanvas();
 
     document.addEventListener("keydown", cambiarDireccion);
-    controles.forEach(btn => {
-      btn.addEventListener("click", () => {
-        cambiarDireccionTouch(btn.dataset.dir);
-      });
-    });
     btnReiniciar.addEventListener("click", reiniciarJuego);
+
+    // Variables para táctil
+    let startX, startY;
+    canvas.addEventListener("touchstart", e => {
+      const touch = e.touches[0];
+      startX = touch.clientX;
+      startY = touch.clientY;
+    });
+
+    canvas.addEventListener("touchmove", e => {
+      if (!startX || !startY) return;
+
+      const touch = e.touches[0];
+      const diffX = touch.clientX - startX;
+      const diffY = touch.clientY - startY;
+
+      if (Math.abs(diffX) > Math.abs(diffY)) {
+        if (diffX > 30 && dx === 0) {
+          dx = bloque;
+          dy = 0;
+        } else if (diffX < -30 && dx === 0) {
+          dx = -bloque;
+          dy = 0;
+        }
+      } else {
+        if (diffY > 30 && dy === 0) {
+          dx = 0;
+          dy = bloque;
+        } else if (diffY < -30 && dy === 0) {
+          dx = 0;
+          dy = -bloque;
+        }
+      }
+
+      // Reset para evitar múltiples cambios en un solo gesto
+      startX = null;
+      startY = null;
+    });
 
     function cambiarDireccion(e) {
       if (e.key === "ArrowUp" && dy === 0) {
@@ -184,22 +164,6 @@
         dx = -bloque;
         dy = 0;
       } else if (e.key === "ArrowRight" && dx === 0) {
-        dx = bloque;
-        dy = 0;
-      }
-    }
-
-    function cambiarDireccionTouch(dir) {
-      if (dir === "up" && dy === 0) {
-        dx = 0;
-        dy = -bloque;
-      } else if (dir === "down" && dy === 0) {
-        dx = 0;
-        dy = bloque;
-      } else if (dir === "left" && dx === 0) {
-        dx = -bloque;
-        dy = 0;
-      } else if (dir === "right" && dx === 0) {
         dx = bloque;
         dy = 0;
       }
