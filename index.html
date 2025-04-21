@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>🐍 Juego de la Serpiente</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <style>
     html, body {
       margin: 0;
@@ -10,6 +11,7 @@
       height: 100%;
       background-color: #eee;
       font-family: sans-serif;
+      overflow: hidden;
     }
 
     #puntaje {
@@ -26,38 +28,36 @@
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      display: flex;
+      display: none;
       flex-direction: column;
       align-items: center;
-      gap: 10px;
+      gap: 15px;
       z-index: 3;
     }
 
     .fila {
       display: flex;
-      gap: 10px;
+      gap: 15px;
     }
 
     .btn-control {
-      width: 60px;
-      height: 60px;
-      font-size: 24px;
+      width: 80px;
+      height: 80px;
+      font-size: 36px;
       background-color: #333;
       color: white;
       border: none;
       border-radius: 50%;
-      text-align: center;
-      line-height: 60px;
       user-select: none;
     }
 
     canvas {
-        display: block;
-        width: 100vw;
-        height: 100vh;
-        background-image: url('https://editorial.uefa.com/resources/027b-16a6f83fcf8f-179708787343-1000/cristiano_ronaldo_of_portugal_celebrates_after_scoring_a.jpeg');
-        background-size: cover;
-        background-position: center;
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      background-image: url('https://editorial.uefa.com/resources/027b-16a6f83fcf8f-179708787343-1000/cristiano_ronaldo_of_portugal_celebrates_after_scoring_a.jpeg');
+      background-size: cover;
+      background-position: center;
     }
 
     .mensaje-final {
@@ -78,13 +78,40 @@
 
     .mensaje-final button {
       margin-top: 20px;
-      font-size: 20px;
+      font-size: 18px;
       padding: 10px 20px;
-      background-color: #ff5c5c;
-      color: white;
       border: none;
+      background-color: #333;
+      color: white;
       border-radius: 10px;
       cursor: pointer;
+    }
+
+    /* Mostrar controles solo en dispositivos móviles o tablets */
+    @media (max-width: 768px) {
+      #controles {
+        display: flex;
+      }
+
+      #puntaje {
+        font-size: 26px;
+      }
+
+      .mensaje-final {
+        font-size: 36px;
+        padding: 40px;
+      }
+
+      .mensaje-final button {
+        font-size: 22px;
+        padding: 12px 28px;
+      }
+
+      .btn-control {
+        width: 100px;
+        height: 100px;
+        font-size: 40px;
+      }
     }
   </style>
 </head>
@@ -92,7 +119,7 @@
   <div id="puntaje">⚽️ Puntaje: 0</div>
   <canvas id="juego"></canvas>
 
-  <!-- Controles para pantallas táctiles -->
+  <!-- Controles móviles -->
   <div id="controles">
     <div class="fila">
       <button class="btn-control" data-dir="up">⬆️</button>
@@ -104,7 +131,7 @@
     </div>
   </div>
 
-  <!-- Pantalla final -->
+  <!-- Pantalla final al perder -->
   <div id="pantallaFinal" class="mensaje-final">
     <div id="puntajeFinal">Tu puntaje: 0 ⚽</div>
     <button id="reiniciar">Volver a jugar</button>
@@ -130,6 +157,10 @@
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
       bloque = Math.floor(canvas.width / 30);
+
+      if (window.innerWidth <= 768) {
+        bloque = Math.floor(canvas.width / 20);
+      }
     }
     window.addEventListener("resize", ajustarCanvas);
     ajustarCanvas();
