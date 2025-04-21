@@ -23,20 +23,6 @@
       z-index: 2;
     }
 
-    #reiniciar {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      z-index: 3;
-      padding: 10px 20px;
-      font-size: 18px;
-      border: none;
-      background-color: #333;
-      color: white;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-
     canvas {
       display: block;
       width: 100vw;
@@ -62,6 +48,17 @@
       display: none;
     }
 
+    .mensaje-final button {
+      margin-top: 20px;
+      font-size: 18px;
+      padding: 10px 20px;
+      border: none;
+      background-color: #333;
+      color: white;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
     @media (max-width: 768px) {
       #puntaje {
         font-size: 26px;
@@ -72,9 +69,9 @@
         padding: 40px;
       }
 
-      #reiniciar {
-        font-size: 20px;
-        padding: 12px 24px;
+      .mensaje-final button {
+        font-size: 22px;
+        padding: 12px 28px;
       }
     }
   </style>
@@ -107,7 +104,10 @@
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
       bloque = Math.floor(canvas.width / 30);
-      if (window.innerWidth <= 768) bloque = Math.floor(canvas.width / 20);
+
+      if (window.innerWidth <= 768) {
+        bloque = Math.floor(canvas.width / 20);
+      }
     }
     window.addEventListener("resize", ajustarCanvas);
     ajustarCanvas();
@@ -115,43 +115,47 @@
     document.addEventListener("keydown", cambiarDireccion);
     btnReiniciar.addEventListener("click", reiniciarJuego);
 
-    // Variables para táctil
-    let startX, startY;
+    // 👇 Manejo de gestos táctiles
+    let xInicial = null;
+    let yInicial = null;
+
     canvas.addEventListener("touchstart", e => {
-      const touch = e.touches[0];
-      startX = touch.clientX;
-      startY = touch.clientY;
-    });
+      const toque = e.touches[0];
+      xInicial = toque.clientX;
+      yInicial = toque.clientY;
+    }, { passive: true });
 
     canvas.addEventListener("touchmove", e => {
-      if (!startX || !startY) return;
+      if (!xInicial || !yInicial) return;
 
-      const touch = e.touches[0];
-      const diffX = touch.clientX - startX;
-      const diffY = touch.clientY - startY;
+      const toque = e.touches[0];
+      const xFinal = toque.clientX;
+      const yFinal = toque.clientY;
 
-      if (Math.abs(diffX) > Math.abs(diffY)) {
-        if (diffX > 30 && dx === 0) {
+      const dxTouch = xFinal - xInicial;
+      const dyTouch = yFinal - yInicial;
+
+      if (Math.abs(dxTouch) > Math.abs(dyTouch)) {
+        if (dxTouch > 20 && dx !== -bloque) {
           dx = bloque;
           dy = 0;
-        } else if (diffX < -30 && dx === 0) {
+        } else if (dxTouch < -20 && dx !== bloque) {
           dx = -bloque;
           dy = 0;
         }
       } else {
-        if (diffY > 30 && dy === 0) {
+        if (dyTouch > 20 && dy !== -bloque) {
           dx = 0;
           dy = bloque;
-        } else if (diffY < -30 && dy === 0) {
+        } else if (dyTouch < -20 && dy !== bloque) {
           dx = 0;
           dy = -bloque;
         }
       }
 
-      // Reset para evitar múltiples cambios en un solo gesto
-      startX = null;
-      startY = null;
-    });
+      xInicial = null;
+      yInicial = null;
+    }, { passive: true });
 
     function cambiarDireccion(e) {
       if (e.key === "ArrowUp" && dy === 0) {
@@ -187,6 +191,9 @@
         comida = generarComida();
         puntaje++;
         puntajeTexto.innerText = "⚽️ Puntaje: " + puntaje;
+        if (window.navigator.vibrate) {
+          window.navigator.vibrate(100); // vibración al comer
+        }
       } else {
         serpiente.pop();
       }
