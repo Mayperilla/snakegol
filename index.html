@@ -2,272 +2,226 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>🐍 Juego de la Serpiente</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Juego Snake</title>
   <style>
-    /* -----------------------------------
-       Reset y Safe‑Areas
-    ----------------------------------- */
-    html, body {
+    * {
       margin: 0;
-      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body, html {
       height: 100%;
-      background-color: #111;
-      font-family: sans-serif;
+      font-family: Arial, sans-serif;
       overflow: hidden;
+      background-color: black;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    #game-area {
+      flex: 1;
       position: relative;
     }
 
-    /* -----------------------------------
-       Puntaje
-    ----------------------------------- */
-    #puntaje {
-      position: absolute;
-      top: calc(env(safe-area-inset-top) + 10px);
-      left: calc(env(safe-area-inset-left) + 10px);
-      color: white;
-      font-size: 20px;
-      z-index: 2;
-    }
-
-    /* -----------------------------------
-       Canvas
-    ----------------------------------- */
     canvas {
       display: block;
-      background-image: url('https://editorial.uefa.com/resources/027b-16a6f83fcf8f-179708787343-1000/cristiano_ronaldo_of_portugal_celebrates_after_scoring_a.jpeg');
+      width: 100%;
+      height: 100%;
+      background-image: url('https://i.imgur.com/jkY8qPa.jpg'); /* Cambia por tu imagen */
       background-size: cover;
       background-position: center;
     }
 
-    /* Mensaje final */
-    .mensaje-final {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0,0,0,0.7);
-      padding: 30px;
-      border-radius: 20px;
-      color: white;
-      font-size: 30px;
-      font-weight: bold;
-      text-align: center;
-      z-index: 4;
+    .controls {
       display: none;
     }
-    .mensaje-final button {
-      margin-top: 20px;
-      font-size: 18px;
-      padding: 10px 20px;
-      border: none;
-      background-color: #333;
-      color: white;
-      border-radius: 10px;
-      cursor: pointer;
-    }
 
-    /* Controles PlayStation (ocultos en desktop) */
-    #controles {
-      position: absolute;
-      bottom: env(safe-area-inset-bottom);
-      left: 0;
-      width: 100%;
-      height: calc(40vh - env(safe-area-inset-bottom));
-      display: none;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      gap: 15px;
-      background: rgba(0,0,0,0.5);
-      z-index: 3;
-    }
-    .fila {
-      display: flex;
-      justify-content: center;
-      gap: 40px;
-    }
-    .btn-control.playstation {
-      width: 70px;
-      height: 70px;
-      font-size: 32px;
-      font-family: 'Press Start 2P', sans-serif;
-      border-radius: 50%;
-      border: 3px solid white;
-      background-color: #222;
-      color: white;
-      box-shadow: 0 0 15px rgba(255,255,255,0.25);
-      user-select: none;
-      transition: transform .1s ease, box-shadow .1s ease;
-    }
-    .btn-control[data-dir="up"]    { color: #00ff00; } /* 🔺 Triángulo */
-    .btn-control[data-dir="right"] { color: #ff3333; } /* 🔴 Círculo */
-    .btn-control[data-dir="down"]  { color: #00ccff; } /* ❌ Equis */
-    .btn-control[data-dir="left"]  { color: #ff66ff; } /* 🔷 Cuadrado */
-    .btn-control:active {
-      transform: scale(0.92);
-      box-shadow: 0 0 25px #fff;
-    }
-    .invisible {
-      visibility: hidden;
-    }
-
-    /* -----------------------------------
-       Media Queries
-    ----------------------------------- */
-    /* Móvil: dividir pantalla 60% juego / 40% controles */
+    /* SOLO en pantallas pequeñas (mobile) */
     @media (max-width: 768px) {
-      canvas {
-        width: 100vw;
-        height: 60vh;
+      .container {
+        flex-direction: column;
       }
-      #controles {
+
+      #game-area {
+        flex: 1 1 50%;
+      }
+
+      .controls {
+        flex: 1 1 50%;
         display: flex;
+        justify-content: center;
+        align-items: center;
+        background: black;
+        padding: 20px;
+        gap: 30px;
+        flex-wrap: wrap;
       }
-      #puntaje {
+
+      .button {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background-color: #222;
+        border: 3px solid white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
         font-size: 24px;
+        box-shadow: 0 0 10px white;
       }
-      .mensaje-final {
-        font-size: 36px;
-        padding: 40px;
+
+      .up    { order: 1; }
+      .left  { order: 2; margin-right: auto; }
+      .down  { order: 3; }
+      .right { order: 4; margin-left: auto; }
+
+      .button:active {
+        transform: scale(0.95);
+        background-color: #444;
       }
-      .mensaje-final button {
-        font-size: 22px;
-        padding: 12px 28px;
+
+      .controls-wrapper {
+        width: 100%;
+        display: grid;
+        grid-template-areas:
+          ".    up    ."
+          "left down right";
+        grid-gap: 10px;
+        justify-items: center;
       }
+
+      .up    { grid-area: up; }
+      .down  { grid-area: down; }
+      .left  { grid-area: left; }
+      .right { grid-area: right; }
     }
 
-    /* Desktop: full‐screen canvas, sin controles */
-    @media (min-width: 769px) {
-      canvas {
-        width: 100vw;
-        height: 100vh;
-      }
-      #controles {
-        display: none;
-      }
+    #score {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: white;
+      font-size: 24px;
+      font-weight: bold;
+      text-shadow: 1px 1px 3px black;
     }
   </style>
 </head>
 <body>
-  <div id="puntaje">⚽️ Puntaje: 0</div>
-  <canvas id="juego"></canvas>
+  <div class="container">
+    <div id="game-area">
+      <div id="score">⚽ Puntaje: 0</div>
+      <canvas id="gameCanvas"></canvas>
+    </div>
 
-  <!-- Controles PlayStation (solo en móvil) -->
-  <div id="controles">
-    <div class="fila">
-      <button class="btn-control playstation" data-dir="up">🔺</button>
+    <div class="controls">
+      <div class="controls-wrapper">
+        <button class="button up" onclick="setDirection('up')">▲</button>
+        <button class="button left" onclick="setDirection('left')">◀</button>
+        <button class="button down" onclick="setDirection('down')">▼</button>
+        <button class="button right" onclick="setDirection('right')">▶</button>
+      </div>
     </div>
-    <div class="fila">
-      <button class="btn-control playstation" data-dir="left">🔷</button>
-      <button class="btn-control invisible"></button>
-      <button class="btn-control playstation" data-dir="right">🔴</button>
-    </div>
-    <div class="fila">
-      <button class="btn-control playstation" data-dir="down">❌</button>
-    </div>
-  </div>
-
-  <!-- Mensaje final -->
-  <div id="pantallaFinal" class="mensaje-final">
-    <div id="puntajeFinal">Tu puntaje: 0 ⚽</div>
-    <button id="reiniciar">Volver a jugar</button>
   </div>
 
   <script>
-    const canvas = document.getElementById("juego");
-    const ctx = canvas.getContext("2d");
-    const puntajeTexto = document.getElementById("puntaje");
-    const btnReiniciar = document.getElementById("reiniciar");
-    const controles = document.querySelectorAll(".btn-control");
-    const mensajeFinal = document.getElementById("pantallaFinal");
-    const puntajeFinal = document.getElementById("puntajeFinal");
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    let score = 0;
 
-    let bloque, intervalo;
-    let serpiente, dx, dy, comida, puntaje, juegoTerminado;
+    let snake = [{ x: 10, y: 10 }];
+    let direction = 'right';
+    let food = { x: 15, y: 15 };
+    const gridSize = 20;
 
-    const manzanaImg = new Image();
-    manzanaImg.src = "manzana.png";
+    function resizeCanvas() {
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+    }
 
-    function ajustarCanvas() {
-      if (window.innerWidth <= 768) {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight * 0.6;
-        bloque = Math.floor(canvas.width / 20);
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = 'lime';
+      snake.forEach(segment => {
+        ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize, gridSize);
+      });
+
+      ctx.fillStyle = 'red';
+      ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
+
+      move();
+      checkCollision();
+
+      document.getElementById('score').innerText = `⚽ Puntaje: ${score}`;
+    }
+
+    function move() {
+      const head = { ...snake[0] };
+
+      if (direction === 'right') head.x += 1;
+      if (direction === 'left') head.x -= 1;
+      if (direction === 'up') head.y -= 1;
+      if (direction === 'down') head.y += 1;
+
+      snake.unshift(head);
+
+      if (head.x === food.x && head.y === food.y) {
+        score++;
+        food = {
+          x: Math.floor(Math.random() * (canvas.width / gridSize)),
+          y: Math.floor(Math.random() * (canvas.height / gridSize))
+        };
       } else {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        bloque = Math.floor(canvas.width / 30);
+        snake.pop();
       }
     }
-    window.addEventListener("resize", ajustarCanvas);
-    ajustarCanvas();
 
-    document.addEventListener("keydown", cambiarDireccion);
-    controles.forEach(btn => btn.addEventListener("click", ()=> cambiarDireccionTouch(btn.dataset.dir)));
-    btnReiniciar.addEventListener("click", reiniciarJuego);
+    function checkCollision() {
+      const head = snake[0];
 
-    function cambiarDireccion(e) {
-      if (e.key === "ArrowUp" && dy === 0)    { dx=0; dy=-bloque; }
-      if (e.key === "ArrowDown" && dy === 0)  { dx=0; dy=bloque; }
-      if (e.key === "ArrowLeft" && dx === 0)  { dx=-bloque; dy=0; }
-      if (e.key === "ArrowRight" && dx === 0) { dx=bloque; dy=0; }
-    }
-    function cambiarDireccionTouch(dir) {
-      if (dir==='up'    && dy===0) { dx=0; dy=-bloque; }
-      if (dir==='down'  && dy===0) { dx=0; dy=bloque;  }
-      if (dir==='left'  && dx===0) { dx=-bloque; dy=0; }
-      if (dir==='right' && dx===0) { dx=bloque;  dy=0; }
-    }
-
-    function generarComida() {
-      const x = Math.floor(Math.random()*(canvas.width/bloque))*bloque;
-      const y = Math.floor(Math.random()*(canvas.height/bloque))*bloque;
-      return { x, y };
-    }
-
-    function dibujar() {
-      if (juegoTerminado) return;
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      const cabeza = { x: serpiente[0].x+dx, y: serpiente[0].y+dy };
-      serpiente.unshift(cabeza);
-
-      if (cabeza.x===comida.x && cabeza.y===comida.y) {
-        comida = generarComida();
-        puntaje++;
-        puntajeTexto.innerText = `⚽️ Puntaje: ${puntaje}`;
-      } else {
-        serpiente.pop();
+      if (
+        head.x < 0 || head.y < 0 ||
+        head.x >= canvas.width / gridSize ||
+        head.y >= canvas.height / gridSize ||
+        snake.slice(1).some(s => s.x === head.x && s.y === head.y)
+      ) {
+        alert('¡Juego terminado!');
+        snake = [{ x: 10, y: 10 }];
+        direction = 'right';
+        score = 0;
       }
+    }
 
-      if (cabeza.x<0||cabeza.x>=canvas.width||cabeza.y<0||cabeza.y>=canvas.height||
-          serpiente.slice(1).some(p=>p.x===cabeza.x&&p.y===cabeza.y)) {
-        juegoTerminado=true;
-        clearInterval(intervalo);
-        puntajeFinal.innerText=`Tu puntaje: ${puntaje} ⚽`;
-        mensajeFinal.style.display="block";
-        return;
+    function setDirection(newDirection) {
+      if (
+        (direction === 'up' && newDirection !== 'down') ||
+        (direction === 'down' && newDirection !== 'up') ||
+        (direction === 'left' && newDirection !== 'right') ||
+        (direction === 'right' && newDirection !== 'left')
+      ) {
+        direction = newDirection;
       }
-
-      ctx.drawImage(manzanaImg, comida.x, comida.y, bloque, bloque);
-      ctx.fillStyle="black";
-      serpiente.forEach(p=>ctx.fillRect(p.x,p.y,bloque,bloque));
     }
 
-    function iniciarJuego() {
-      serpiente=[{ x: bloque*5, y: bloque*5 }];
-      dx=bloque; dy=0;
-      comida=generarComida();
-      puntaje=0; juegoTerminado=false;
-      puntajeTexto.innerText="⚽️ Puntaje: 0";
-      mensajeFinal.style.display="none";
-      clearInterval(intervalo);
-      intervalo=setInterval(dibujar, 100);
-    }
-    function reiniciarJuego() { iniciarJuego(); }
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowUp') setDirection('up');
+      if (e.key === 'ArrowDown') setDirection('down');
+      if (e.key === 'ArrowLeft') setDirection('left');
+      if (e.key === 'ArrowRight') setDirection('right');
+    });
 
-    manzanaImg.onload = iniciarJuego;
+    setInterval(draw, 100);
   </script>
 </body>
 </html>
